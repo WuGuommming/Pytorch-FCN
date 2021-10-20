@@ -83,8 +83,11 @@ all_model = {"FCNs": FCNs,
              "FCN16s": FCN16s,
              "FCN32s": FCN32s,
              }
-tar_num = '32s'
+tar_num = '8s'
 tar_model = 'FCN' + tar_num
+
+logName = str(datetime.now()) + "_" + tar_model + ".txt"
+logFile = open("F:\\workspace\\log\\Pytorch-FCN\\" + logName.replace(':', '-'), 'wt')
 
 
 def main():
@@ -193,6 +196,7 @@ def main():
                _eval_loss / len(validData), _eval_acc / len(vocTest), _eval_mean_iu / len(vocTest)))
         time_str = 'Time: {:.0f}:{:.0f}:{:.0f}'.format(h, m, s)
         print(epoch_str + time_str)
+        logFile.write(epoch_str + time_str + "\n")
 
     torch.save(net.state_dict(), 'F:\\workspace\\model\\fcn_pytorch_' + tar_num + '.pth')
 
