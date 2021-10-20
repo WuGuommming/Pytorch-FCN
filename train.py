@@ -6,7 +6,6 @@ import torch.nn as nn
 import torch.nn.functional as f
 import torch
 import numpy as np
-
 import VOCdata
 
 from FCN import FCNs, FCN8s, FCN16s, FCN32s, VGGNet
@@ -98,8 +97,10 @@ def main():
     optimizer = optim.Adam(net.parameters(), lr=1e-4)
 
     print('-----------------------train-----------------------')
+    logName = str(datetime.now()) + "_" + tar_model + ".txt"
+    logFile = open("F:\\workspace\\log\\Pytorch-FCN\\" + logName.replace(':', '-'), 'wt')
 
-    for epoch in range(30):
+    for epoch in range(50):
         _train_loss = 0
         _train_acc = 0
         _train_acc_cls = 0
@@ -196,7 +197,7 @@ def main():
                _eval_loss / len(validData), _eval_acc / len(vocTest), _eval_mean_iu / len(vocTest)))
         time_str = 'Time: {:.0f}:{:.0f}:{:.0f}'.format(h, m, s)
         print(epoch_str + time_str)
-
+        logFile.write(epoch_str + time_str + "\n")
     torch.save(net.state_dict(), 'F:\\workspace\\model\\fcn_pytorch_'
                                  + tar_num + "_isBilinear" if isBilinearForDeconv else "" + '.pth')
 
