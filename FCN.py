@@ -87,12 +87,8 @@ class FCN8s(nn.Module):
         self.bn1     = nn.BatchNorm2d(512)
         self.deconv2 = nn.ConvTranspose2d(512, 256, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
         self.bn2     = nn.BatchNorm2d(256)
-        self.deconv3 = nn.ConvTranspose2d(256, 128, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn3     = nn.BatchNorm2d(128)
-        self.deconv4 = nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn4     = nn.BatchNorm2d(64)
-        self.deconv5 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
-        self.bn5     = nn.BatchNorm2d(32)
+        self.deconv3 = nn.ConvTranspose2d(256, 32, kernel_size=10, stride=8, padding=1, dilation=1)
+        self.bn3     = nn.BatchNorm2d(32)
         self.classifier = nn.Conv2d(32, n_class, kernel_size=1)
 
     def forward(self, x):
@@ -105,9 +101,7 @@ class FCN8s(nn.Module):
         score = self.bn1(score + x4)                      # size=(N, 512, x.H/16, x.W/16)
         score = self.relu(self.deconv2(score))            # size=(N, 256, x.H/8, x.W/8)
         score = self.bn2(score + x3)                      # size=(N, 256, x.H/8, x.W/8)
-        score = self.bn3(self.relu(self.deconv3(score)))  # size=(N, 128, x.H/4, x.W/4)
-        score = self.bn4(self.relu(self.deconv4(score)))  # size=(N, 64, x.H/2, x.W/2)
-        score = self.bn5(self.relu(self.deconv5(score)))  # size=(N, 32, x.H, x.W)
+        score = self.bn3(self.relu(self.deconv3(score)))
         score = self.classifier(score)                    # size=(N, n_class, x.H/1, x.W/1)
 
         return score  # size=(N, n_class, x.H/1, x.W/1)
