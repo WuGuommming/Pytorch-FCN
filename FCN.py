@@ -9,6 +9,18 @@ from torchvision import models
 from torchvision.models.vgg import VGG
 
 
+# [batch, channel, h, w]
+# 把sour切成tar的尺寸 从外往里 只切h和w
+# 要求sour比tar尺寸大
+def CropTensor(sour, tar):
+    hcast = int(sour.shape[2] - tar.shape[2])
+    wcast = int(sour.shape[3] - tar.shape[3])
+
+    res = torch.narrow(sour, 2, int(hcast/2), int(tar.shape[2]))
+    res = torch.narrow(res, 3, int(wcast/2), int(tar.shape[3]))
+    return res
+
+
 class FCN32s(nn.Module):
 
     def __init__(self, pretrained_net, n_class):
@@ -83,11 +95,11 @@ class FCN8s(nn.Module):
         self.n_class = n_class
         self.pretrained_net = pretrained_net
         self.relu    = nn.ReLU(inplace=True)
-        self.deconv1 = nn.ConvTranspose2d(512, 512, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
+        self.deconv1 = nn.ConvTranspose2d(512, 512, kernel_size=4, stride=2, dilation=1)
         self.bn1     = nn.BatchNorm2d(512)
-        self.deconv2 = nn.ConvTranspose2d(512, 256, kernel_size=3, stride=2, padding=1, dilation=1, output_padding=1)
+        self.deconv2 = nn.ConvTranspose2d(512, 256, kernel_size=4, stride=2, dilation=1)
         self.bn2     = nn.BatchNorm2d(256)
-        self.deconv3 = nn.ConvTranspose2d(256, 32, kernel_size=10, stride=8, padding=1, dilation=1)
+        self.deconv3 = nn.ConvTranspose2d(256, 32, kernel_size=16, stride=8, dilation=1)
         self.bn3     = nn.BatchNorm2d(32)
         self.classifier = nn.Conv2d(32, n_class, kernel_size=1)
 
@@ -98,10 +110,17 @@ class FCN8s(nn.Module):
         x3 = output[3]  # size=(N, 256, x.H/8,  x.W/8)
 
         score = self.relu(self.deconv1(x5))               # size=(N, 512, x.H/16, x.W/16)
+
+        score = CropTensor(score, x4)
         score = self.bn1(score + x4)                      # size=(N, 512, x.H/16, x.W/16)
         score = self.relu(self.deconv2(score))            # size=(N, 256, x.H/8, x.W/8)
+
+        score = CropTensor(score, x3)
         score = self.bn2(score + x3)                      # size=(N, 256, x.H/8, x.W/8)
         score = self.bn3(self.relu(self.deconv3(score)))
+
+        score = torch.narrow(score, 2, 4, 224)
+        score = torch.narrow(score, 3, 4, 224)
         score = self.classifier(score)                    # size=(N, n_class, x.H/1, x.W/1)
 
         return score  # size=(N, n_class, x.H/1, x.W/1)

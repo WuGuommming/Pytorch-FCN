@@ -99,7 +99,7 @@ def main():
 
     print('-----------------------train-----------------------')
 
-    for epoch in range(30):
+    for epoch in range(20):
         _train_loss = 0
         _train_acc = 0
         _train_acc_cls = 0
