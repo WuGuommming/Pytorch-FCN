@@ -83,13 +83,16 @@ all_model = {"FCNs": FCNs,
              "FCN16s": FCN16s,
              "FCN32s": FCN32s,
              }
-tar_num = '32s'
+tar_num = '8s'
 tar_model = 'FCN' + tar_num
+isBilinearForDeconv = 1
 
 
 def main():
     vgg_model = VGGNet(requires_grad=True)
-    net = all_model[tar_model](pretrained_net=vgg_model, n_class=len(VOCdata.classes))
+    net = all_model[tar_model](pretrained_net=vgg_model,
+                               n_class=len(VOCdata.classes),
+                               isBilinearForDeconv=isBilinearForDeconv)
     net = net.cuda()
     criterion = nn.NLLLoss().cuda()
     optimizer = optim.Adam(net.parameters(), lr=1e-4)
@@ -194,7 +197,8 @@ def main():
         time_str = 'Time: {:.0f}:{:.0f}:{:.0f}'.format(h, m, s)
         print(epoch_str + time_str)
 
-    torch.save(net.state_dict(), 'F:\\workspace\\model\\fcn_pytorch_' + tar_num + '.pth')
+    torch.save(net.state_dict(), 'F:\\workspace\\model\\fcn_pytorch_'
+                                 + tar_num + "_isBilinear" if isBilinearForDeconv else "" + '.pth')
 
 
 if __name__ == '__main__':

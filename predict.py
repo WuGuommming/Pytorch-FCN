@@ -48,12 +48,14 @@ all_model = {"FCNs": FCNs,
              "FCN16s": FCN16s,
              "FCN32s": FCN32s,
              }
-tar_num = '16s'
+tar_num = '8s'
 tar_model = 'FCN' + tar_num
+isBilinearForDeconv = True
 
 vgg_model = VGGNet(requires_grad=True)
-net = all_model[tar_model](pretrained_net=vgg_model, n_class=num_classes).cuda()
-net.load_state_dict(torch.load("F:\\workspace\\model\\fcn_pytorch_" + tar_num + ".pth"))
+net = all_model[tar_model](pretrained_net=vgg_model, n_class=num_classes, isBilinearForDeconv=isBilinearForDeconv).cuda()
+net.load_state_dict(torch.load("F:\\workspace\\model\\fcn_pytorch_"
+                               + tar_num + "_isBilinear" if isBilinearForDeconv else "" + ".pth"))
 net.eval()
 
 testRoot = 'F:\\workspace\\test\\'  # 图片
