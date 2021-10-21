@@ -48,7 +48,7 @@ all_model = {"FCNs": FCNs,
              "FCN16s": FCN16s,
              "FCN32s": FCN32s,
              }
-tar_num = '8s'
+tar_num = '16s'
 tar_model = 'FCN' + tar_num
 
 vgg_model = VGGNet(requires_grad=True)
