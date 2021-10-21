@@ -12,12 +12,17 @@ from torchvision.models.vgg import VGG
 # [batch, channel, h, w]
 # 把sour切成tar的尺寸 从外往里 只切h和w
 # 要求sour比tar尺寸大
-def CropTensor(sour, tar):
-    hcast = int(sour.shape[2] - tar.shape[2])
-    wcast = int(sour.shape[3] - tar.shape[3])
+# 默认裁剪到224
+def CropTensor(sour, tar=None):
+    if not tar:
+        res = torch.narrow(sour, 2, int((sour.shape[2]-224) / 2), 224)
+        res = torch.narrow(res, 3, int((sour.shape[3]-224) / 2), 224)
+    else:
+        hcast = int(sour.shape[2] - tar.shape[2])
+        wcast = int(sour.shape[3] - tar.shape[3])
 
-    res = torch.narrow(sour, 2, int(hcast/2), int(tar.shape[2]))
-    res = torch.narrow(res, 3, int(wcast/2), int(tar.shape[3]))
+        res = torch.narrow(sour, 2, int(hcast/2), int(tar.shape[2]))
+        res = torch.narrow(res, 3, int(wcast/2), int(tar.shape[3]))
     return res
 
 
@@ -78,8 +83,7 @@ class FCN16s(nn.Module):
         score = self.bn1(score + x4)                      # element-wise add, size=(N, 512, x.H/16, x.W/16)
         score = self.bn2(self.relu(self.deconv2(score)))  # size=(N, 256, x.H/8, x.W/8)
 
-        score = torch.narrow(score, 2, 8, 224)
-        score = torch.narrow(score, 3, 8, 224)
+        score = CropTensor(score)
         score = self.classifier(score)                    # size=(N, n_class, x.H/1, x.W/1)
 
         return score  # size=(N, n_class, x.H/1, x.W/1)
@@ -116,8 +120,7 @@ class FCN8s(nn.Module):
         score = self.bn2(score + x3)                      # size=(N, 256, x.H/8, x.W/8)
         score = self.bn3(self.relu(self.deconv3(score)))
 
-        score = torch.narrow(score, 2, 4, 224)
-        score = torch.narrow(score, 3, 4, 224)
+        score = CropTensor(score)
         score = self.classifier(score)                    # size=(N, n_class, x.H/1, x.W/1)
 
         return score  # size=(N, n_class, x.H/1, x.W/1)
